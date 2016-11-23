@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 
 public class PlayerControl : MonoBehaviour {
 
@@ -11,24 +12,94 @@ public class PlayerControl : MonoBehaviour {
 
     private const float RunSpeedSub = 5.0f * 4.0f;
 
-    private float attackDisableTime = 1.0f;
+    private float attackDisableTime = 0.5f;
+    private float attackTime = 0.0f;
+
+    enum State
+    {
+        None = -1,
+        Run,
+        Attack,
+        Beaten
+    }
+
+    enum AttackMode
+    {
+        Left = 0,
+        Right
+    }
+
+    private List<string> animationTriggers = new List<string>(){"AttackLeft","AttackRight"};
+
+    private State state = State.None;
+    private State nextState = State.None;
+    private AttackMode attackMode = AttackMode.Left;
 
 	// Use this for initialization
 	void Start () {
         Vector3 v = GetComponent<Rigidbody>().velocity;
         v.x = runSpeed;
         GetComponent<Rigidbody>().velocity = v;
-	}
+
+        state = State.Run;
+
+    }
 	
 	// Update is called once per frame
 	void Update () {
-        runSpeed += RunSpeedAdd * Time.deltaTime;
 
-        runSpeed = Mathf.Clamp(runSpeed, 0, RunSpeedMax);
+        switch (state)
+        {
+            case State.None:
+                {
+                    break;
+                }
+            case State.Run:
+                {
+                    runSpeed += RunSpeedAdd * Time.deltaTime;
+                    runSpeed = Mathf.Clamp(runSpeed, 0, RunSpeedMax);
 
-        Vector3 v = GetComponent<Rigidbody>().velocity;
-        v.x = runSpeed;
-        GetComponent<Rigidbody>().velocity = v;
+                    Vector3 v = GetComponent<Rigidbody>().velocity;
+                    v.x = runSpeed;
+                    GetComponent<Rigidbody>().velocity = v;
+                    break;
+                }
+            case State.Attack:
+                {
+                    attackTime += Time.deltaTime;
+
+                    if (attackTime > 0.5f)
+                    {
+                        state = State.Run;
+                    }
+                    break;
+                }
+            case State.Beaten:
+                {
+
+                    break;
+                }
+        }
+
+        switch (nextState)
+        {
+            case State.Run:
+                {
+                    break;
+                }
+            case State.Attack:
+                {
+                    break;
+                }
+            case State.Beaten:
+                {
+                    GetComponent<Rigidbody>().velocity = new Vector3(1,5,0);
+                    state = State.Run;
+                    nextState = State.None;
+                    break;
+                }
+        }
+        
 
 #if UNITY_EDITOR
         // Move a large distance to check the floor movement
@@ -50,19 +121,29 @@ public class PlayerControl : MonoBehaviour {
             // Check Attack
             if (Input.GetMouseButton(0))
             {
-                GetComponentInChildren<Animator>().SetTrigger("AttackLeft");
+                attackTime = 0;
+                GetComponentInChildren<Animator>().SetTrigger(animationTriggers[(int)attackMode]);
+                attackMode = (AttackMode)(((int)attackMode+1)%2);
+                state = State.Attack;
                 attackDisableTime = 1.0f;
             }
 
-            if (Input.GetMouseButton(1))
-            {
-                GetComponentInChildren<Animator>().SetTrigger("AttackRight");
-                attackDisableTime = 1.0f;
-            }
         } else
         {
             attackDisableTime -= Time.deltaTime;
         }
+    }
 
+    private void OnCollisionEnter(Collision collision)
+    {
+        if(collision.gameObject.tag == "Oni")
+        {
+            if (state == State.Attack)
+            {
+                collision.gameObject.GetComponent<OniControl>().AttackedByPlayer(new Vector3(40, 20, 10), new Vector3(0, 90, 45));
+            }
+            else
+                nextState = State.Beaten;
+        }
     }
 }
