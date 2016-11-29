@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-public class SceneControl : MonoBehaviour {
+public class GameSceneControl : MonoBehaviour {
 
     public const float OniAppearDistance = 50;
     private PlayerControl player;

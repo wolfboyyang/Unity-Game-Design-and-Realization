@@ -15,6 +15,13 @@ public class PlayerControl : MonoBehaviour {
     private float attackDisableTime = 0.5f;
     private float attackTime = 0.0f;
 
+    private bool playable;
+    public bool Playable
+    {
+        get { return playable; }
+        set { playable = value; }
+    }
+
     enum State
     {
         None = -1,
@@ -116,7 +123,7 @@ public class PlayerControl : MonoBehaviour {
             transform.position = new Vector3(transform.position.x - FloorControl.TotalWith * 100.0f, transform.position.y, transform.position.z);
         }
 
-        if (attackDisableTime < 0)
+        if ((attackDisableTime < 0) && playable)
         {
             // Check Attack
             if (Input.GetMouseButton(0))
@@ -134,7 +141,7 @@ public class PlayerControl : MonoBehaviour {
         }
     }
 
-    private void OnCollisionEnter(Collision collision)
+    void OnCollisionEnter(Collision collision)
     {
         if(collision.gameObject.tag == "Oni")
         {
@@ -146,4 +153,6 @@ public class PlayerControl : MonoBehaviour {
                 nextState = State.Beaten;
         }
     }
+
+    
 }
