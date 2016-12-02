@@ -4,7 +4,7 @@ using UnityEngine.UI;
 
 public class FadeControl : MonoBehaviour {
 
-    private float time;// Current time
+    private float timer;// Current time
     private float fadeTime; // Fade duration
     private Color colorStart; // Color when fade starts
     private Color colorEnd; // Color when fade ends
@@ -14,7 +14,7 @@ public class FadeControl : MonoBehaviour {
 
 	void Awake ()
     {
-        time = 0.0f;
+        timer = 0.0f;
         fadeTime = 0.0f;
         colorStart = new Color(0, 0, 0, 0);
         colorEnd = new Color(0, 0, 0, 0);
@@ -23,17 +23,17 @@ public class FadeControl : MonoBehaviour {
 	// Update is called once per frame
 	void Update ()
     {
-	    if(time < fadeTime)
+	    if(timer < fadeTime)
         {
             float rate = 1.0f;
-            if(fadeTime!=0) rate = time / fadeTime;
+            if(fadeTime!=0) rate = timer / fadeTime;
 
             rate = Mathf.Sin(rate * Mathf.PI / 2.0f);
             Color color = Color.Lerp(colorStart, colorEnd, rate);
 
             fadeImage.color = color;
 
-            time += Time.deltaTime;
+            timer += Time.deltaTime;
         }
 	}
 
@@ -51,28 +51,28 @@ public class FadeControl : MonoBehaviour {
         colorStart = start;
         colorEnd = end;
 
-        this.time = 0;
+        this.timer = 0;
     }
 
     public bool IsActive
     {
-        get { return time < fadeTime; }
+        get { return timer < fadeTime; }
     }
 
-    private static FadeControl instance;
+    private static FadeControl _instance;
     public static FadeControl Instance
     {
         get
         {
-            if (instance == null)
+            if (_instance == null)
             {
-                GameObject go = GameObject.Find("FadeControl");
+                var go = GameObject.Find("FadeControl");
                 if (go != null)
-                    instance = go.GetComponent<FadeControl>();
+                    _instance = go.GetComponent<FadeControl>();
                 else
                     Debug.LogError("Cannot find GameObject \"FadeControl\".");
             }
-            return instance;
+            return _instance;
         }
     }
 }

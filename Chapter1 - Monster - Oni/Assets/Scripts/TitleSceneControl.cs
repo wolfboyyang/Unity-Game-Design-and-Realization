@@ -17,7 +17,7 @@ public class TitleSceneControl : MonoBehaviour {
 
     private State state = State.None;
     private State nextState = State.None;
-    private float stateTime = 0.0f;
+    private float timer = 0.0f;
 
     private FadeControl fadeControl;
 
@@ -32,7 +32,7 @@ public class TitleSceneControl : MonoBehaviour {
 	void Start () {
         // set player uncontrollable
         PlayerControl player = GameObject.FindGameObjectWithTag("Player").GetComponent<PlayerControl>();
-        player.Playable = false;
+        player.IsPlayable = false;
 
         fadeControl = FadeControl.Instance;
         fadeControl.Fade(FadeTime, new Color(0, 0, 0, 1.0f), new Color(0, 0, 0, 0));
@@ -45,7 +45,7 @@ public class TitleSceneControl : MonoBehaviour {
 	
 	// Update is called once per frame
 	void Update () {
-        stateTime += Time.deltaTime;
+        timer += Time.deltaTime;
 
         switch (state)
         {
@@ -59,7 +59,7 @@ public class TitleSceneControl : MonoBehaviour {
             case State.WaitSoundEffectEnd:
                 {
                     // Scale Animation for start image.
-                    float rate = stateTime / TitleAnimationTime;
+                    float rate = timer / TitleAnimationTime;
                     float scale = Mathf.Lerp(2.0f, 1.0f, rate);
 
                     startImage.rectTransform.localScale = Vector3.one * scale;
@@ -102,7 +102,7 @@ public class TitleSceneControl : MonoBehaviour {
 
             state = nextState;
             nextState = State.None;
-            stateTime = 0;
+            timer = 0;
         }
 	}
 }
