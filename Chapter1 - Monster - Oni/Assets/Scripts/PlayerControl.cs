@@ -77,6 +77,9 @@ public class PlayerControl : MonoBehaviour {
 
     public AttackMotion attackMotion = AttackMotion.Left;
 
+    public AnimatedTextureExtendedUV attackLeftTail;
+    public AnimatedTextureExtendedUV attackRightTail;
+
     public ParticleSystem hitFX;
     public ParticleSystem runFX;
 
@@ -92,6 +95,9 @@ public class PlayerControl : MonoBehaviour {
 
         attackCollider = GameObject.FindGameObjectWithTag("AttackCollider").GetComponent<AttackColliderControl>();
         attackCollider.player = this;
+
+        attackLeftTail.Stop();
+        attackRightTail.Stop();
 
         attackVoiceAudio = gameObject.AddComponent<AudioSource>();
         swordAudio = gameObject.AddComponent<AudioSource>();
@@ -304,7 +310,32 @@ public class PlayerControl : MonoBehaviour {
 
     private void SwordFXControl()
     {
+        if (attackTimer > 0.0f)
+        {
+            if (animator.GetCurrentAnimatorClipInfoCount(0) == 0) return;
+            var clipInfo = animator.GetCurrentAnimatorClipInfo(0)[0];
+            var clip = clipInfo.clip;
+            var stateInfo = animator.GetCurrentAnimatorStateInfo(0);
 
+            AnimatedTextureExtendedUV animation = null;
+            switch (attackMotion)
+            {
+                default:
+                case AttackMotion.Right:
+                    animation = attackLeftTail;
+                    break;
+                case AttackMotion.Left:
+                    animation = attackRightTail;
+                    break;
+            }
+
+            float startFrame = 2.5f;
+            float startTime = startFrame / clip.frameRate;
+            float currentTime = stateInfo.normalizedTime * stateInfo.length;
+
+            if (currentTime >= startTime)
+                animation.Play(currentTime - startTime);
+        }
     }
 
     
