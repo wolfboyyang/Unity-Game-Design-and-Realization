@@ -48,13 +48,15 @@ public class PieceControl : MonoBehaviour {
     }
     // Use this for initialization
     void Start () {
-        nextState = State.Idle;
     }
 	
 	// Update is called once per frame
 	void Update () {
         switch (state)
         {
+            case State.None:
+                nextState = State.Restart;
+                break;
             case State.Idle:
                 if (isDragging)
                     nextState = State.Dragging;
@@ -62,9 +64,16 @@ public class PieceControl : MonoBehaviour {
             case State.Dragging:
                 {
                     DoDragging();
+                    var color = Color.white;
                     if (IsInAttachRange())
                     {
-
+                        color = Color.green;
+                        if (!isDragging)
+                        {
+                            nextState = State.Attaching;
+                            attachTarget = finishedPositon;
+                            gameSceneControl.PlaySound(GameSceneControl.SoundEffect.Attach);
+                        }
                     }
                     else
                     {
@@ -74,9 +83,23 @@ public class PieceControl : MonoBehaviour {
                             gameSceneControl.PlaySound(GameSceneControl.SoundEffect.Release);
                         }
                     }
+                    GetComponent<Renderer>().material.color = color;
                     break;
                 }
             case State.Attaching:
+                var distance = attachTarget - transform.position;
+                distance *= 0.5f;
+                float minMoveDistance = AttachSpeedMin * Time.deltaTime;
+                float maxMoveDistacne = AttachSpeedMax * Time.deltaTime;
+                if (distance.magnitude < minMoveDistance)
+                    transform.position = attachTarget;
+                else if (distance.magnitude > maxMoveDistacne)
+                    distance *= maxMoveDistacne / distance.magnitude;
+
+                transform.position = transform.position + distance;
+
+                if (Vector3.Distance(transform.position, attachTarget) < 0.0001f)
+                    nextState = State.Finished;
                 break;
         }
 
@@ -93,10 +116,13 @@ public class PieceControl : MonoBehaviour {
                     break;
                 case State.Dragging:
                     BeginDragging();
-
+                    puzzleControl.PickPiece(this);
                     gameSceneControl.PlaySound(GameSceneControl.SoundEffect.Grab);
                     break;
                 case State.Finished:
+                    transform.position = finishedPositon;
+                    puzzleControl.FinishPiece(this);
+                    GetComponent<Renderer>().material.color = Color.white;
                     break;
             }
             state = nextState;
@@ -147,7 +173,8 @@ public class PieceControl : MonoBehaviour {
         isDragging = false;
     }
 
-    // as I use z axis as the height, smaller z is higher
+    // in 2D mode, the front coodination is x,y.
+    // z is the depth, the bigger z the deeper into the screen 
     public void SetHeightOffset(float offset)
     {
         var position = transform.position;
@@ -183,7 +210,6 @@ public class PieceControl : MonoBehaviour {
 
     private bool IsInAttachRange()
     {
-        return false;
         if (Vector3.Distance(transform.position, finishedPositon) < attachDistance)
             return true;
         else

@@ -38,6 +38,7 @@ public class GameSceneControl : MonoBehaviour
         var go = Instantiate<GameObject>(puzzlePrefab);
         puzzleControl = go.GetComponent<PuzzleControl>();
         puzzleControl.gameSceneControl = this;
+        nextState = State.Play;
     }
 
     // Update is called once per frame
@@ -51,6 +52,7 @@ public class GameSceneControl : MonoBehaviour
                 if (puzzleControl.IsCleared())
                     nextState = State.Clear;
                 break;
+
             case State.Clear:
                 if(timer > sounds[(int)SoundEffect.Complete].length + 0.5f)
                 {
@@ -72,7 +74,6 @@ public class GameSceneControl : MonoBehaviour
                         CompleteImage.SetActive(true);
                         break;
                     }
-                    
             }
 
             state = nextState;
@@ -83,7 +84,10 @@ public class GameSceneControl : MonoBehaviour
 
     public void OnRetryButtonPressed()
     {
-        PlaySound(SoundEffect.Button);
+        if (!puzzleControl.IsCleared()) {
+            puzzleControl.Restart();
+            PlaySound(SoundEffect.Button);
+        }
     }
 
     public void PlaySound(SoundEffect se)
