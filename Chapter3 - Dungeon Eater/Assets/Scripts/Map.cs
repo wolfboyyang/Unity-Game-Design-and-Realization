@@ -18,7 +18,7 @@ public class Map : MonoBehaviour
     private const float GemY = 0.5f;
     private const float GemSize = 0.4f;
 
-    public Transform[] children;
+    public Transform floor;
 
     public enum SpawnPointType
     {
@@ -77,17 +77,30 @@ public class Map : MonoBehaviour
     public void CreateModel()
     {
         LoadFromAsset(defaultMap);
-        CreateMap("MapModel", false, false);
+        CreateMap("MapModel", true, false);
     }
 
-    private void SetMapData()
+    private void SetMapData(int stage)
     {
+        if (stage > mapTextAssets.Length)
+            stage %= mapTextAssets.Length;
 
+        LoadFromAsset(mapTextAssets[stage]);
     }
 
-    public void OnStageStart()
+    public void OnStageStart(int stage)
     {
+        DestroyMap();
+        SetMapData(stage);
+        CreateMap("MapCollision", true, false);
+        CreateMap("MapBlocks", false, false);
+        floor.position = new Vector3(
+            mapData.offsetX + (mapData.width-1) / 2.0f,
+            floor.position.y, 
+            mapData.offsetZ + (mapData.height-1) / 2.0f);
+        floor.localScale = new Vector3(mapData.width / 10.0f, 1.0f, mapData.height / 10.0f);
 
+        currentGemNum = totalGemNum;
     }
 
     private void LoadFromAsset(TextAsset asset)
@@ -112,15 +125,15 @@ public class Map : MonoBehaviour
         mapData.height = int.Parse(size[1]);
 
         var blockData = new char[mapData.height, mapData.width];
-        for(int i = 0; i < mapData.height; i++)
+        for (int z = mapData.height - 1, i = 1; z >= 0; z--, i++)
         {
-            if (i + 1 >= lines.Length) break;
+            if (i >= lines.Length) break;
 
-            var data = lines[i+1].Split(spliter, option);
-            for(int j = 0; j < mapData.width; j++)
+            var data = lines[i].Split(spliter, option);
+            for (int x = 0; x < mapData.width; x++)
             {
-                if (j >= data.Length) break;
-                blockData[i, j] = data[j][0];
+                if (x >= data.Length) break;
+                blockData[z, x] = data[x][0];
             }
         }
         mapData.data = blockData;
@@ -246,13 +259,14 @@ public class Map : MonoBehaviour
 
         if (modelOnly) return;
 
-        children = mapObjects.GetComponentsInChildren<Transform>();
+        var children = mapObjects.GetComponentsInChildren<Transform>();
         mapObjects.AddComponent<CombineChildren>();
         mapObjects.GetComponent<CombineChildren>().Combine();
+        Destroy(mapObjects.GetComponent<CombineChildren>());
 
         // Note: first "child" is parent
-        for (int i = 1; i < children.Length; i++)
-            Destroy(children[i].gameObject, collisionMode);
+        //for (int i = 1; i < children.Length; i++)
+        //    Destroy(children[i].gameObject, collisionMode);
         
         if (collisionMode)
         {
@@ -316,6 +330,20 @@ public class Map : MonoBehaviour
             return 0;
 
         return mapData.data[gridZ, gridX];
+    }
+
+    public Vector3 GetSpawnPoint(SpawnPointType type)
+    {
+        int t = (int)type;
+        if (t < spawnPositions.Length)
+        {
+            return spawnPositions[t];
+        }
+        else
+        {
+            Debug.LogWarning("Spawn Point is not found.");
+            return new Vector3(MapOriginX, 0, MapOriginZ);
+        }
     }
 
     
