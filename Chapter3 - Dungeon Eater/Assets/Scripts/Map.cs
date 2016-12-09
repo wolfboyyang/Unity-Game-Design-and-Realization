@@ -132,19 +132,45 @@ public class Map : MonoBehaviour
         mapData.gemParticleIndex = new int[mapData.height, mapData.width];
         totalGemNum = 0;
 
-        for(int i = 0; i < mapData.height; i++)
+        for(int z = 0; z < mapData.height; z++)
         {
-            for(int j=0;j<mapData.width;j++)
+            for(int x=0;x<mapData.width;x++)
             {
-                if (IsGem(j, i))
+                if (IsGem(x, z))
                     totalGemNum++;
             }
         }
 
+        gemEmitter = GetComponent<ParticleSystem>();
+        ParticleSystem.EmitParams e = new ParticleSystem.EmitParams();
         gemEmitter.Emit(totalGemNum);
 
-        //var gemParticle = gemEmitter.GetParticles()
+        var gemParticles = new ParticleSystem.Particle[totalGemNum];
+        var count = gemEmitter.GetParticles(gemParticles);
+        int gemCount = 0;
+        for (int z = 0; z < mapData.height; z++)
+        {
+            for (int x = 0; x < mapData.width; x++)
+            {
+                var position = new Vector3(x + mapData.offsetX, GemY, z + mapData.offsetZ);
+                mapData.gemParticleIndex[z, x] = -1;
+                if (IsGem(x, z))
+                {
+                    gemParticles[gemCount].position = position;
+                    gemParticles[gemCount].startSize = GemSize;
+                    mapData.gemParticleIndex[z, x] = gemCount;
+                    gemCount++;
+                }
 
+                if(mapData.data[z,x] == Sword)
+                {
+                    var go = Instantiate<GameObject>(itemObjects[0], position, Quaternion.identity);
+                    go.transform.parent = items.transform;
+                }
+            }
+        }
+
+        gemEmitter.SetParticles(gemParticles, totalGemNum);
     }
 
     private bool IsGem(int x, int z)
@@ -168,7 +194,8 @@ public class Map : MonoBehaviour
         spawnPositions = new Vector3[(int)SpawnPointType.Num];
 
         if (items != null)
-            Destroy(items);
+            Destroy(items, collisionMode);
+        items = new GameObject("Iterm Folder");
 
         for (int z = 0; z < mapData.height; z++)
         {
@@ -227,16 +254,16 @@ public class Map : MonoBehaviour
         for (int i = 1; i < children.Length; i++)
             Destroy(children[i].gameObject, collisionMode);
         
-        //if (collisionMode)
-        //{
-        //    mapObjects.AddComponent<MeshCollider>();
-        //     mapObjects.GetComponent<MeshCollider>().sharedMesh = mapObjects.GetComponent<MeshFilter>().mesh;
-        //    Destroy(mapObjects.GetComponent<MeshRenderer>(), collisionMode);
-        //    mapCollision = mapObjects;
-        //}
+        if (collisionMode)
+        {
+            mapObjects.AddComponent<MeshCollider>();
+            mapObjects.GetComponent<MeshCollider>().sharedMesh = mapObjects.GetComponent<MeshFilter>().mesh;
+            Destroy(mapObjects.GetComponent<MeshRenderer>(), collisionMode);
+            mapCollision = mapObjects;
+        }
 
-        //if(!collisionMode)
-        //    SetupGemsAndItems();
+        if(!collisionMode)
+            SetupGemsAndItems();
     }
 
     private void Destroy(Object obj, bool collisionMode)
@@ -247,6 +274,24 @@ public class Map : MonoBehaviour
         Destroy(obj);
 #endif
     }
+
+    private void Destroy(Object[] obj, bool collisionMode = false)
+    {
+#if UNITY_EDITOR
+        for(int i = 0; i < obj.Length; i++)
+        {
+            DestroyImmediate(obj[i]);
+            obj[i] = null;
+        }
+#else
+         for(int i = 0; i < obj.Length; i++)
+        {
+            Destroy(obj[i]);
+            obj[i] = null;
+        }
+#endif
+    }
+
     private void DestroyMap()
     {
         if (mapObjects != null)
