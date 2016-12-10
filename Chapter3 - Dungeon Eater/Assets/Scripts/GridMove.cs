@@ -63,13 +63,19 @@ public class GridMove : MonoBehaviour
         var position = transform.position + direction * speed * time;
 
         bool across = false;
+
+        // does player cross the grid?
+        // we don't want player to half-cross the wall
+        // so not use round but cast
+        if ((int)position.x != (int)transform.position.x)
+            across = true;
+        else if ((int)position.z != (int)transform.position.z)
+            across = true;
+
+        // the closest grid
         currentGrid = new Vector3(Mathf.Round(position.x), position.y, Mathf.Round(position.z));
-
-        if (currentGrid.x != (int)transform.position.x)
-            across = true;
-        else if (currentGrid.z != (int)transform.position.z)
-            across = true;
-
+        // is there a wall ahead?
+        // only need to check if player moved more than half unit
         var forwardPosition = position + direction * 0.5f;
         if (Mathf.Round(forwardPosition.x) != currentGrid.x ||
                 Mathf.Round(forwardPosition.z) != currentGrid.z)
