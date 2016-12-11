@@ -5,6 +5,10 @@ using UnityEngine.UI;
 
 public class GameUIControl : MonoBehaviour {
 
+    public Image readyImage;
+    public Image gameOverImage;
+    public Image stageClearImage;
+
     public Text scoreText;
     public Text stageText;
 
@@ -20,11 +24,27 @@ public class GameUIControl : MonoBehaviour {
 
     public void SetStage(int stage)
     {
-        stageText.text = "Stage " + stage;
+        stageText.text = "Stage " + (stage+1);
     }
 
     public void SetScore(int score)
     {
         scoreText.text = "SCORE: "+score;
     }
+
+    public void DrawStageStart(bool visible)
+    {
+        readyImage.gameObject.SetActive(visible);
+    }
+
+    public void DrawGameOver(bool visible)
+    {
+        gameOverImage.gameObject.SetActive(visible);
+    }
+
+    public void DrawStageClear(bool visible)
+    {
+        stageClearImage.gameObject.SetActive(visible);
+    }
+
 }

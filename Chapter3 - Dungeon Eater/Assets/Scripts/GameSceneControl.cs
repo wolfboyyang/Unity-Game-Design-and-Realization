@@ -70,17 +70,14 @@ public class GameSceneControl : MonoBehaviour
         OnStageStart();
     }
 
-    public void OnEatAll()
-    {
-        Debug.Log("Eat All");
-    }
-
     public void OnStageStart()
     {
         map.SendMessage("OnStageStart", stage);
         GameObject.FindGameObjectWithTag("Player").SendMessage("OnStageStart");
 
         gameUIControl.SetStage(stage);
+        gameUIControl.DrawStageClear(false);
+
         var treasurePosition = map.GetSpawnPoint(Map.SpawnPointType.Treasure);
         if (treasurePosition != Vector3.zero)
         {
@@ -91,7 +88,23 @@ public class GameSceneControl : MonoBehaviour
         }
         else if (treasureGenerator != null)
             Destroy(treasureGenerator);
-            
+
+        GetComponent<AudioSource>().Play();
+        gameUIControl.DrawStageStart(true);
+        StartCoroutine("StageStartWait");    
+    }
+
+    IEnumerator StageStartWait()
+    {
+        yield return new WaitForSeconds(1.0f);
+        gameUIControl.DrawStageStart(false);
+    }
+
+    public void OnEatAll()
+    {
+        gameUIControl.DrawStageClear(true);
+
+        StartCoroutine("StageClear");
     }
 
     public void StopHit(bool enable)
@@ -117,6 +130,14 @@ public class GameSceneControl : MonoBehaviour
     {
         this.score += score;
         gameUIControl.SetScore(this.score);
+    }
+
+    private IEnumerator StageClear()
+    {
+        GetComponent<AudioSource>().PlayOneShot(stageClearSound);
+        yield return new WaitForSeconds(3.0f);
+        stage++;
+        OnStageStart();
     }
 
 }

@@ -268,8 +268,8 @@ public class Map : MonoBehaviour
         Destroy(mapObjects.GetComponent<CombineChildren>());
 
         // Note: first "child" is parent
-        //for (int i = 1; i < children.Length; i++)
-        //    Destroy(children[i].gameObject, collisionMode);
+        for (int i = 1; i < children.Length; i++)
+            Destroy(children[i].gameObject, collisionMode);
         
         if (collisionMode)
         {
@@ -315,7 +315,7 @@ public class Map : MonoBehaviour
             Destroy(mapObjects);
         mapObjects = null;
 
-        if (mapCollision = null)
+        if (mapCollision != null)
             Destroy(mapCollision);
         if (items != null)
             Destroy(items);
