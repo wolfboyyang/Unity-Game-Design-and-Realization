@@ -19,7 +19,7 @@ public class Map : MonoBehaviour
     private const float GemSize = 0.4f;
 
     public Transform floor;
-    private GameObject gameSceneControl;
+    private GameObject gameController;
 
     public enum SpawnPointType
     {
@@ -60,14 +60,14 @@ public class Map : MonoBehaviour
     private ParticleSystem.Particle[] gemParticles;
     private int totalGemNum;
     private int currentGemNum;
-    public AudioClip pickUpGemSound;
+    public AudioClip pickupGemSound;
 
     private const int GemScore = 10;
     
     // Use this for initialization
     void Start()
     {
-        gameSceneControl = GameObject.FindGameObjectWithTag("GameController");
+        gameController = GameObject.FindGameObjectWithTag("GameController");
     }
 
     // Update is called once per frame
@@ -179,7 +179,7 @@ public class Map : MonoBehaviour
 
                 if(mapData.data[z,x] == Sword)
                 {
-                    var go = Instantiate<GameObject>(itemObjects[0], position, Quaternion.identity);
+                    var go = Instantiate(itemObjects[0], position, Quaternion.identity);
                     go.transform.parent = items.transform;
                 }
             }
@@ -211,6 +211,7 @@ public class Map : MonoBehaviour
         if (items != null)
             Destroy(items, collisionMode);
         items = new GameObject("Iterm Folder");
+        items.AddComponent<AudioSource>();
 
         for (int z = 0; z < mapData.height; z++)
         {
@@ -222,7 +223,7 @@ public class Map : MonoBehaviour
                     case Wall:
                         if (collisionMode)
                         {
-                            var go = Instantiate<GameObject>(
+                            var go = Instantiate(
                                 wallForCollision,
                                 position + Vector3.up * 0.5f,
                                 Quaternion.identity);
@@ -230,7 +231,7 @@ public class Map : MonoBehaviour
                         }
                         else
                         {
-                            var go = Instantiate<GameObject>(
+                            var go = Instantiate(
                                 wallObjects[0],
                                 position + Vector3.up * WallY,
                                 Quaternion.identity);
@@ -361,7 +362,7 @@ public class Map : MonoBehaviour
             return true;
     }
 
-    public void PickUpItem(Vector3 position)
+    public void PickupItem(Vector3 position)
     {
         int x, z;
         if(GetGridPosition(position, out x, out z))
@@ -373,11 +374,11 @@ public class Map : MonoBehaviour
                 gemParticles[gemIndex].startSize = 0;
                 gemEmitter.SetParticles(gemParticles,totalGemNum);
                 mapData.gemParticleIndex[z, x] = -1;
-                GetComponent<AudioSource>().PlayOneShot(pickUpGemSound);
-                gameSceneControl.SendMessage("AddScore", GemScore);
+                GetComponent<AudioSource>().PlayOneShot(pickupGemSound);
+                gameController.SendMessage("AddScore", GemScore);
                 currentGemNum--;
                 if (currentGemNum <= 0)
-                    gameSceneControl.SendMessage("OnEatAll");
+                    gameController.SendMessage("OnEatAll");
             }
         }
     }

@@ -25,6 +25,6 @@ public class GameUIControl : MonoBehaviour {
 
     public void SetScore(int score)
     {
-        stageText.text = "SCORE: "+score;
+        scoreText.text = "SCORE: "+score;
     }
 }

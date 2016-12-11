@@ -12,7 +12,7 @@ public class GameSceneControl : MonoBehaviour
     public const int Retry = 2;
 
     public GameObject enemyPrefab;
-    public GameObject treasureGenerator;
+    public GameObject treasureGeneratorPrefab;
 
     public AudioClip bgmAudioClip;
     public AudioClip stageClearSound;
@@ -23,6 +23,7 @@ public class GameSceneControl : MonoBehaviour
     private int retryRemain;
     private List<GameObject> objList = new List<GameObject>();
     private int stage = StartStage;
+    private GameObject treasureGenerator;
 
     private int score;
 
@@ -76,8 +77,21 @@ public class GameSceneControl : MonoBehaviour
 
     public void OnStageStart()
     {
-        GameObject.FindGameObjectWithTag("Map").SendMessage("OnStageStart", stage);
+        map.SendMessage("OnStageStart", stage);
         GameObject.FindGameObjectWithTag("Player").SendMessage("OnStageStart");
+
+        gameUIControl.SetStage(stage);
+        var treasurePosition = map.GetSpawnPoint(Map.SpawnPointType.Treasure);
+        if (treasurePosition != Vector3.zero)
+        {
+            if (treasureGenerator == null)
+                treasureGenerator = Instantiate(treasureGeneratorPrefab, treasurePosition, Quaternion.identity);
+            else
+                treasureGenerator.transform.position = treasurePosition;
+        }
+        else if (treasureGenerator != null)
+            Destroy(treasureGenerator);
+            
     }
 
     public void StopHit(bool enable)
