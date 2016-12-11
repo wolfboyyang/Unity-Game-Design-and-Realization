@@ -83,6 +83,8 @@ public class PlayerController : MonoBehaviour
 
     public void OnGrid(Vector3 position)
     {
+        map.PickUpItem(position);
+
         var direction = GetMoveDirection();
 
         // no input

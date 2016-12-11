@@ -19,6 +19,7 @@ public class Map : MonoBehaviour
     private const float GemSize = 0.4f;
 
     public Transform floor;
+    private GameObject gameSceneControl;
 
     public enum SpawnPointType
     {
@@ -56,16 +57,17 @@ public class Map : MonoBehaviour
     public TextAsset[] mapTextAssets;
 
     private ParticleSystem gemEmitter;
+    private ParticleSystem.Particle[] gemParticles;
     private int totalGemNum;
     private int currentGemNum;
-    public AudioClip pickGemSound;
+    public AudioClip pickUpGemSound;
 
     private const int GemScore = 10;
-
+    
     // Use this for initialization
     void Start()
     {
-
+        gameSceneControl = GameObject.FindGameObjectWithTag("GameController");
     }
 
     // Update is called once per frame
@@ -158,9 +160,9 @@ public class Map : MonoBehaviour
         ParticleSystem.EmitParams e = new ParticleSystem.EmitParams();
         gemEmitter.Emit(totalGemNum);
 
-        var gemParticles = new ParticleSystem.Particle[totalGemNum];
+        gemParticles = new ParticleSystem.Particle[totalGemNum];
         var count = gemEmitter.GetParticles(gemParticles);
-        int gemCount = 0;
+        int gemIndex = 0;
         for (int z = 0; z < mapData.height; z++)
         {
             for (int x = 0; x < mapData.width; x++)
@@ -169,10 +171,10 @@ public class Map : MonoBehaviour
                 mapData.gemParticleIndex[z, x] = -1;
                 if (IsGem(x, z))
                 {
-                    gemParticles[gemCount].position = position;
-                    gemParticles[gemCount].startSize = GemSize;
-                    mapData.gemParticleIndex[z, x] = gemCount;
-                    gemCount++;
+                    gemParticles[gemIndex].position = position;
+                    gemParticles[gemIndex].startSize = GemSize;
+                    mapData.gemParticleIndex[z, x] = gemIndex;
+                    gemIndex++;
                 }
 
                 if(mapData.data[z,x] == Sword)
@@ -346,5 +348,38 @@ public class Map : MonoBehaviour
         }
     }
 
+    public bool GetGridPosition(Vector3 position, out int x, out int z)
+    {
+        x = Mathf.RoundToInt(position.x);
+        z = Mathf.RoundToInt(position.z);
+
+        x -= mapData.offsetX;
+        z -= mapData.offsetZ;
+        if (x < 0 || x >= mapData.width || z < 0 || z >= mapData.height)
+            return false;
+        else
+            return true;
+    }
+
+    public void PickUpItem(Vector3 position)
+    {
+        int x, z;
+        if(GetGridPosition(position, out x, out z))
+        {
+            var gemIndex = mapData.gemParticleIndex[z, x];
+            if (gemIndex >= 0)
+            {
+                gemEmitter.GetParticles(gemParticles);
+                gemParticles[gemIndex].startSize = 0;
+                gemEmitter.SetParticles(gemParticles,totalGemNum);
+                mapData.gemParticleIndex[z, x] = -1;
+                GetComponent<AudioSource>().PlayOneShot(pickUpGemSound);
+                gameSceneControl.SendMessage("AddScore", GemScore);
+                currentGemNum--;
+                if (currentGemNum <= 0)
+                    gameSceneControl.SendMessage("OnEatAll");
+            }
+        }
+    }
     
 }
