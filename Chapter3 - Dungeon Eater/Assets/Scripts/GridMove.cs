@@ -7,12 +7,12 @@ public class GridMove : MonoBehaviour
 
     private enum MoveState
     {
-        None,
+        Normal,
         Pause,
         HitStop
     }
 
-    private MoveState state = MoveState.None;
+    private MoveState state = MoveState.Normal;
 
     public float speed = 1.0f;
 
@@ -28,13 +28,13 @@ public class GridMove : MonoBehaviour
     {
         moveDistance = 0.0f;
         direction = Vector3.forward;
-        state = MoveState.None;
+        state = MoveState.Normal;
     }
 
     // Update is called once per frame
     void Update()
     {
-        if (state != MoveState.None)
+        if (state != MoveState.Normal)
         {
             moveDistance = 0.0f;
         }
@@ -55,7 +55,7 @@ public class GridMove : MonoBehaviour
     public void OnStageStart()
     {
         moveDistance = 0.0f;
-        state = MoveState.None;
+        state = MoveState.Normal;
     }
 
     public void Move(float time)
@@ -127,7 +127,7 @@ public class GridMove : MonoBehaviour
 
     public bool IsWalking { get { return moveDistance > 0.01f; } }
 
-    public void StopHit(bool enable)
+    public void HitStop(bool enable)
     {
         if (enable)
             state |= MoveState.HitStop;
@@ -135,4 +135,19 @@ public class GridMove : MonoBehaviour
             state &= ~MoveState.HitStop;
     }
 
+    public void OnDead()
+    {
+        state = MoveState.Pause;
+    }
+
+    public void OnRestart()
+    {
+        moveDistance = 0.0f;
+        state = MoveState.Normal;
+    }
+
+    public void OnReborn()
+    {
+        state = MoveState.Normal;
+    }
 }

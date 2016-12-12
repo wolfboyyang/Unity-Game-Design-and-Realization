@@ -8,11 +8,11 @@ public class Map : MonoBehaviour
     private const int MapOriginX = 100;
     private const int MapOriginZ = 100;
 
-    private const char Gem                  = 'c';
-    private const char Wall                 = '*';
-    private const char Sword                = 's';
-    private const char PlayerSpawnPoint     = 'p';
-    private const char TreasureSpawnPoint   = 't';
+    private const char Gem = 'c';
+    private const char Wall = '*';
+    private const char Sword = 's';
+    private const char PlayerSpawnPoint = 'p';
+    private const char TreasureSpawnPoint = 't';
 
     private const float WallY = 0.0f;
     private const float GemY = 0.5f;
@@ -63,7 +63,7 @@ public class Map : MonoBehaviour
     public AudioClip pickupGemSound;
 
     private const int GemScore = 10;
-    
+
     // Use this for initialization
     void Start()
     {
@@ -97,9 +97,9 @@ public class Map : MonoBehaviour
         CreateMap("MapCollision", true, false);
         CreateMap("MapBlocks", false, false);
         floor.position = new Vector3(
-            mapData.offsetX + (mapData.width-1) / 2.0f,
-            floor.position.y, 
-            mapData.offsetZ + (mapData.height-1) / 2.0f);
+            mapData.offsetX + (mapData.width - 1) / 2.0f,
+            floor.position.y,
+            mapData.offsetZ + (mapData.height - 1) / 2.0f);
         floor.localScale = new Vector3(mapData.width / 10.0f, 1.0f, mapData.height / 10.0f);
 
         currentGemNum = totalGemNum;
@@ -147,9 +147,9 @@ public class Map : MonoBehaviour
         mapData.gemParticleIndex = new int[mapData.height, mapData.width];
         totalGemNum = 0;
 
-        for(int z = 0; z < mapData.height; z++)
+        for (int z = 0; z < mapData.height; z++)
         {
-            for(int x=0;x<mapData.width;x++)
+            for (int x = 0; x < mapData.width; x++)
             {
                 if (IsGem(x, z))
                     totalGemNum++;
@@ -157,11 +157,10 @@ public class Map : MonoBehaviour
         }
 
         gemEmitter = GetComponent<ParticleSystem>();
-        ParticleSystem.EmitParams e = new ParticleSystem.EmitParams();
         gemEmitter.Emit(totalGemNum);
 
         gemParticles = new ParticleSystem.Particle[totalGemNum];
-        var count = gemEmitter.GetParticles(gemParticles);
+        gemEmitter.GetParticles(gemParticles);
         int gemIndex = 0;
         for (int z = 0; z < mapData.height; z++)
         {
@@ -177,7 +176,7 @@ public class Map : MonoBehaviour
                     gemIndex++;
                 }
 
-                if(mapData.data[z,x] == Sword)
+                if (mapData.data[z, x] == Sword)
                 {
                     var go = Instantiate(itemObjects[0], position, Quaternion.identity);
                     go.transform.parent = items.transform;
@@ -218,7 +217,7 @@ public class Map : MonoBehaviour
             for (int x = 0; x < mapData.width; x++)
             {
                 var position = new Vector3(x + mapData.offsetX, 0.0f, z + mapData.offsetZ);
-                switch(mapData.data[z,x])
+                switch (mapData.data[z, x])
                 {
                     case Wall:
                         if (collisionMode)
@@ -270,7 +269,7 @@ public class Map : MonoBehaviour
         // Note: first "child" is parent
         for (int i = 1; i < children.Length; i++)
             Destroy(children[i].gameObject, collisionMode);
-        
+
         if (collisionMode)
         {
             mapObjects.AddComponent<MeshCollider>();
@@ -279,7 +278,7 @@ public class Map : MonoBehaviour
             mapCollision = mapObjects;
         }
 
-        if(!collisionMode)
+        if (!collisionMode)
             SetupGemsAndItems();
     }
 
@@ -295,7 +294,7 @@ public class Map : MonoBehaviour
     private void Destroy(Object[] obj, bool collisionMode = false)
     {
 #if UNITY_EDITOR
-        for(int i = 0; i < obj.Length; i++)
+        for (int i = 0; i < obj.Length; i++)
         {
             DestroyImmediate(obj[i]);
             obj[i] = null;
@@ -365,14 +364,14 @@ public class Map : MonoBehaviour
     public void PickupItem(Vector3 position)
     {
         int x, z;
-        if(GetGridPosition(position, out x, out z))
+        if (GetGridPosition(position, out x, out z))
         {
             var gemIndex = mapData.gemParticleIndex[z, x];
             if (gemIndex >= 0)
             {
                 gemEmitter.GetParticles(gemParticles);
                 gemParticles[gemIndex].startSize = 0;
-                gemEmitter.SetParticles(gemParticles,totalGemNum);
+                gemEmitter.SetParticles(gemParticles, totalGemNum);
                 mapData.gemParticleIndex[z, x] = -1;
                 GetComponent<AudioSource>().PlayOneShot(pickupGemSound);
                 gameController.SendMessage("AddScore", GemScore);
@@ -382,5 +381,5 @@ public class Map : MonoBehaviour
             }
         }
     }
-    
+
 }

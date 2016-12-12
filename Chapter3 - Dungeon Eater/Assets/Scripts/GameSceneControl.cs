@@ -4,12 +4,12 @@ using UnityEngine;
 
 public class GameSceneControl : MonoBehaviour
 {
-
+    private bool DisableMonsterSpawn = false;
     private const int StartStage = 0;
 
     public Map map;
 
-    public const int Retry = 2;
+    public const int RetryMax = 2;
 
     public GameObject enemyPrefab;
     public GameObject treasureGeneratorPrefab;
@@ -21,7 +21,6 @@ public class GameSceneControl : MonoBehaviour
     public GameUIControl gameUIControl;
 
     private int retryRemain;
-    private List<GameObject> objList = new List<GameObject>();
     private int stage = StartStage;
     private GameObject treasureGenerator;
 
@@ -63,7 +62,9 @@ public class GameSceneControl : MonoBehaviour
 
     public void GameStart()
     {
-        retryRemain = Retry;
+        retryRemain = RetryMax;
+        gameUIControl.SetLife(retryRemain);
+
         score = 0;
         gameUIControl.SetScore(0);
 
@@ -72,7 +73,28 @@ public class GameSceneControl : MonoBehaviour
 
     public void OnStageStart()
     {
+        // clean stage
+        var enemies = GameObject.FindGameObjectsWithTag("Enemy");
+        foreach (var enemy in enemies)
+            Destroy(enemy);
+
+        // start stage
         map.SendMessage("OnStageStart", stage);
+
+        if (!DisableMonsterSpawn)
+        {
+            for(int i=1;i < 5; i++)
+            {
+                var position = map.GetSpawnPoint((Map.SpawnPointType)i);
+                if (position == Vector3.zero) continue;
+
+                var enemy = Instantiate(enemyPrefab, position, Quaternion.identity);
+                enemy.SendMessage("SetSpawnPosition", position);
+                enemy.SendMessage("OnStageStart");
+            }
+        }
+
+
         GameObject.FindGameObjectWithTag("Player").SendMessage("OnStageStart");
 
         gameUIControl.SetStage(stage);
@@ -116,14 +138,16 @@ public class GameSceneControl : MonoBehaviour
         GameObject.FindGameObjectWithTag("Player").SendMessage("StopHit", enable);
     }
 
-    public void OnAttack()
+    public void OnAttackBegin()
     {
-
+        HitStop(true);
+        Debug.Log("Attack Begin");
     }
 
-    public void OnEndAttack()
+    public void OnAttackEnd()
     {
-
+        HitStop(false);
+        Debug.Log("Attack End");
     }
 
     public void AddScore(int score)
@@ -140,4 +164,52 @@ public class GameSceneControl : MonoBehaviour
         OnStageStart();
     }
 
+    public void PlayerIsDead()
+    {
+        if (retryRemain == 0)
+            StartCoroutine("GameOver");
+        else
+            StartCoroutine("Retry");
+    }
+
+    IEnumerator Retry()
+    {
+        retryRemain--;
+        gameUIControl.LoseLife();
+        yield return new WaitForSeconds(3.0f);
+
+        Restart();
+    }
+
+    IEnumerator GameOver()
+    {
+        GetComponent<AudioSource>().PlayOneShot(gameOverSound);
+        gameUIControl.DrawGameOver(true);
+        yield return new WaitForSeconds(5.0f);
+
+        UnityEngine.SceneManagement.SceneManager.LoadScene("TitleScene");
+    }
+
+    public void Restart()
+    {
+        var enemies = GameObject.FindGameObjectsWithTag("Enemy");
+        foreach (var enemy in enemies)
+            enemy.SendMessage("OnRestart");
+
+        GameObject.FindGameObjectWithTag("Player").SendMessage("OnRestart");
+
+        if (treasureGenerator != null)
+            treasureGenerator.SendMessage("OnRestart");
+
+        gameUIControl.DrawStageStart(true);
+        StartCoroutine("StageStartWait");
+    }
+
+    public void HitStop(bool enable)
+    {
+        var enemies = GameObject.FindGameObjectsWithTag("Enemy");
+        foreach (var enemy in enemies)
+            enemy.SendMessage("HitStop", enable);
+        GameObject.FindGameObjectWithTag("Player").SendMessage("HitStop", enable);
+    }
 }

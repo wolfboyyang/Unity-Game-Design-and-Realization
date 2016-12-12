@@ -9,8 +9,13 @@ public class GameUIControl : MonoBehaviour {
     public Image gameOverImage;
     public Image stageClearImage;
 
+    public GameObject lifeImagePrefab;
+    public int lifeImageOffset = 32;
+
     public Text scoreText;
     public Text stageText;
+    private List<GameObject> lifeImages = new List<GameObject>();
+    private int lifeRemain;
 
 	// Use this for initialization
 	void Start () {
@@ -30,6 +35,35 @@ public class GameUIControl : MonoBehaviour {
     public void SetScore(int score)
     {
         scoreText.text = "SCORE: "+score;
+    }
+
+    public void SetLife(int life)
+    {
+        if(life> lifeImages.Count)
+        {
+            for(int i = lifeImages.Count; i<life;i++)
+            {
+                var lifeImage = Instantiate(lifeImagePrefab, transform, false);
+                lifeImage.transform.Translate(lifeImageOffset * i, 0, 0);
+                lifeImages.Add(lifeImage);
+            }
+        }
+        int index = 0;
+        foreach(var lifeImage in lifeImages)
+        {
+            if (index < life) lifeImage.gameObject.SetActive(true);
+            else lifeImage.SetActive(false);
+            index++;
+        }
+        lifeRemain = life;
+    }
+
+    public void LoseLife()
+    {
+        if (lifeRemain == 0) return;
+
+        lifeRemain--;
+        lifeImages[lifeRemain].SetActive(false);
     }
 
     public void DrawStageStart(bool visible)

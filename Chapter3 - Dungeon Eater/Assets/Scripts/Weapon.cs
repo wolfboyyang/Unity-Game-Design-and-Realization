@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -55,5 +56,50 @@ public class Weapon : MonoBehaviour
             var point = AttackPoint + ComboBonus * combo;
             gameController.SendMessage("AddScore", point);
         }
+    }
+
+    public void AutoAttack(Transform other)
+    {
+        if (equiped)
+        {
+            attackTarget = other;
+            StartCoroutine("SwordAutoAttack");
+        }
+    }
+
+    public bool CanAutoAttack()
+    {
+        return equiped;
+    }
+
+    IEnumerator SwordAutoAttack()
+    {
+        gameController.SendMessage("OnAttackBegin");
+        var targetPosition = attackTarget.position;
+        targetPosition.y = transform.position.y;
+        transform.LookAt(targetPosition);
+        yield return null;
+
+        animator.SetTrigger("BeginAttack");
+        yield return new WaitForSeconds(0.3f);
+
+        GetComponent<AudioSource>().PlayOneShot(attackSound);
+        yield return new WaitForSeconds(0.2f);
+
+        attackTarget.SendMessage("OnDamage");
+
+        yield return null;
+
+        RemoveSword();
+        gameController.SendMessage("OnAttackEnd");
+    }
+
+    private void RemoveSword()
+    {
+        sword.GetComponent<Renderer>().enabled = false;
+        equiped = false;
+        combo = 0;
+
+        SendMessage("OnMonsterDead");
     }
 }
