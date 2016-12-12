@@ -111,6 +111,9 @@ public class GameSceneControl : MonoBehaviour
         else if (treasureGenerator != null)
             Destroy(treasureGenerator);
 
+        // Let player & ghost move
+        HitStop(false);
+
         GetComponent<AudioSource>().Play();
         gameUIControl.DrawStageStart(true);
         StartCoroutine("StageStartWait");    
@@ -126,28 +129,28 @@ public class GameSceneControl : MonoBehaviour
     {
         gameUIControl.DrawStageClear(true);
 
+        // stop player & ghost move
+        HitStop(true);
+
         StartCoroutine("StageClear");
     }
 
-    public void StopHit(bool enable)
+    public void HitStop(bool enable)
     {
         var enemies = GameObject.FindGameObjectsWithTag("Enemy");
         foreach (var enemy in enemies)
-            enemy.SendMessage("StopHit", enable);
-
-        GameObject.FindGameObjectWithTag("Player").SendMessage("StopHit", enable);
+            enemy.SendMessage("HitStop", enable);
+        GameObject.FindGameObjectWithTag("Player").SendMessage("HitStop", enable);
     }
 
     public void OnAttackBegin()
     {
         HitStop(true);
-        Debug.Log("Attack Begin");
     }
 
     public void OnAttackEnd()
     {
         HitStop(false);
-        Debug.Log("Attack End");
     }
 
     public void AddScore(int score)
@@ -201,15 +204,11 @@ public class GameSceneControl : MonoBehaviour
         if (treasureGenerator != null)
             treasureGenerator.SendMessage("OnRestart");
 
+        // Let player & ghost move
+        HitStop(false);
+
+        GetComponent<AudioSource>().Play();
         gameUIControl.DrawStageStart(true);
         StartCoroutine("StageStartWait");
-    }
-
-    public void HitStop(bool enable)
-    {
-        var enemies = GameObject.FindGameObjectsWithTag("Enemy");
-        foreach (var enemy in enemies)
-            enemy.SendMessage("HitStop", enable);
-        GameObject.FindGameObjectWithTag("Player").SendMessage("HitStop", enable);
     }
 }

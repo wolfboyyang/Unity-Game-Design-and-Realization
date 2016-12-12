@@ -97,6 +97,7 @@ public class Weapon : MonoBehaviour
     private void RemoveSword()
     {
         sword.GetComponent<Renderer>().enabled = false;
+        animator.Play("Idle");
         equiped = false;
         combo = 0;
 
